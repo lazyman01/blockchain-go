@@ -13,7 +13,6 @@ func (blockchain *BlockChain) AddBlock(data string)  {
 	blockchain.Blocks = append(blockchain.Blocks, newblock)
 }
 
-
 //创建一个带有创世区块的区块链
 func NewBlockChain() *BlockChain  {
 	return &BlockChain{[]*Block{NewGenesisBlock()}}
