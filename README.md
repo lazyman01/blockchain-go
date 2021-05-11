@@ -1,3 +1,2 @@
 # blockchain-go
-blockchain golang
-造个轮子，区块链go实现
+区块链教程 学习代码备份

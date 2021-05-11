@@ -1,6 +1,8 @@
 package BLC
 
 import (
+	"bytes"
+	"encoding/gob"
 	"log"
 	"time"
 )
@@ -18,16 +20,30 @@ type Block struct {
 	Nonce int
 }
 
-//func (b *Block) SetHash()  {
-//	//1.将时间戳长整型转字符串再转字节数组
-//	timestamp := []byte(strconv.FormatInt(b.Timestamp, 10))
-//	//2.将除了hash以外的其他属性，以字节数组的形式全拼接起来
-//	headers := bytes.Join([][]byte{b.PrevBlockHash, b.Data, timestamp}, []byte{})
-//	//3.将拼接起来的数据进行256hash
-//	hash := sha256.Sum256(headers)
-//	//4.将hash赋给hash
-//	b.Hash = hash[:]
-//}
+//将Block对象序列化成[]byte
+func (b *Block) Serialize() []byte  {
+	var result bytes.Buffer
+	encoder := gob.NewEncoder(&result)
+
+	err := encoder.Encode(b)
+	if err != nil {
+		log.Panic(err)
+	}
+	return result.Bytes()
+}
+
+//将字节数组反序列化成Block
+func DeserializeBlock(d []byte) *Block  {
+	var block Block
+
+	decoder := gob.NewDecoder(bytes.NewReader(d))
+	err := decoder.Decode(&block)
+	if err != nil {
+		log.Panic(err)
+	}
+	return &block
+}
+
 func NewBlock(data string, prevBlockHash []byte) (*Block)  {
 	//创建区块
 	block := &Block{time.Now().Unix(), prevBlockHash,
@@ -53,6 +69,6 @@ func NewBlock(data string, prevBlockHash []byte) (*Block)  {
 }
 
 //生成创世块
-func NewGenesisBlock() *Block  {
-	return NewBlock("Ggnenis Block", []byte{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})
+func NewGenesisBlock(data string) *Block  {
+	return NewBlock(data, []byte{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0})
 }
