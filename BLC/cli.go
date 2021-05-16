@@ -24,9 +24,14 @@ func printUsage()  {
 	fmt.Println("\tprintchain -- 输出区块信息.")
 }
 
-func (cli *CLI) addBlock(data string)  {
+func (cli *CLI) addBlock(txs []*Transaction)  {
+	if DBExists() == false {
+		fmt.Println("数据不存在")
+		os.Exit(1)
+	}
+
 	blockchain := GetBlockchian()
-	blockchain.AddBlock(data)
+	blockchain.AddBlock(txs)
 	defer blockchain.DB.Close()
 }
 
@@ -42,21 +47,37 @@ func (cli *CLI) printchain()  {
 	blockchain.Printchain()
 }
 
-func (cli *CLI) createGenesisBlockchain(data string)  {
-	NewBlockChain(data)
+func (cli *CLI) createGenesisBlockchain(address string)  {
+	NewBlockChain(address)
+}
+
+// 转账
+func (cli *CLI) send(from []string,to []string,amount []string)  {
+
+	MineNewBlock(from,to,amount)
 }
 
 func (cli *CLI) Run()  {
-	addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
+	sendBlockCmd := flag.NewFlagSet("send",flag.ExitOnError)
+	createBlockchainCmd := flag.NewFlagSet("createblockchain",flag.ExitOnError)
+	//addBlockCmd := flag.NewFlagSet("addblock", flag.ExitOnError)
 	printChainCmd := flag.NewFlagSet("printchain", flag.ExitOnError)
-	createBlockchainCmd := flag.NewFlagSet("createblockchain", flag.ExitOnError)
 
-	addBlockData := addBlockCmd.String("data", "", "Block Data")
-	createBlockchainData := createBlockchainCmd.String("data", "Genesis Block", "gennesis block")
+	flagFrom := sendBlockCmd.String("from","","转账源地址......")
+	flagTo := sendBlockCmd.String("to","","转账目的地地址......")
+	flagAmount := sendBlockCmd.String("amount","","转账金额......")
+
+	//addBlockData := addBlockCmd.String("data", "", "Block Data")
+	createBlockchainData := createBlockchainCmd.String("address", "Genesis Block", "创世区块地址")
 	isValidargs()
 	switch os.Args[1] {
-	case "addblock":
-		err := addBlockCmd.Parse(os.Args[2:])
+	//case "addblock":
+	//	err := addBlockCmd.Parse(os.Args[2:])
+	//	if err != nil {
+	//		log.Panic(err)
+	//	}
+	case "send":
+		err := sendBlockCmd.Parse(os.Args[2:])
 		if err != nil {
 			log.Panic(err)
 		}
@@ -75,15 +96,25 @@ func (cli *CLI) Run()  {
 		return
 	}
 
-	if addBlockCmd.Parsed() {
-		if *addBlockData == "" {
+	//if addBlockCmd.Parsed() {
+	//	if *addBlockData == "" {
+	//		printUsage()
+	//		return
+	//	}
+	//	cli.addBlock(*addBlockData)
+	//}
+	if sendBlockCmd.Parsed() {
+		if *flagFrom == "" || *flagTo == "" || *flagAmount == "" {
 			printUsage()
-			return
+			os.Exit(1)
 		}
-		cli.addBlock(*addBlockData)
-	}
 
-	if printChainCmd.Parsed() {
+		from := JSONToArray(*flagFrom)
+		to := JSONToArray(*flagTo)
+		amount := JSONToArray(*flagAmount)
+		cli.send(from,to,amount)
+	}
+		if printChainCmd.Parsed() {
 		cli.printchain()
 	}
 
